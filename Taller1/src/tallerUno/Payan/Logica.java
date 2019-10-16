@@ -1,6 +1,8 @@
 package tallerUno.Payan;
 
 import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
 
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -10,7 +12,7 @@ import processing.core.PVector;
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
-public class Logica {
+public class Logica implements Observer {
 
 	// Variables e Instancias
 	private Main app;
@@ -28,6 +30,7 @@ public class Logica {
 	private PVector origenCam, mouseCam;
 	private float distancia, distanciaMetaUno, distanciaMetaDos, ronda, turnoCoger, turnoPoner, contadorCorrector, zoom;
 	private int cuenta;
+	private Comunicacion com;
 	/////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////
@@ -63,6 +66,13 @@ public class Logica {
 		cuadricula = new ArrayList<Cuadricula>();
 		elementos = new ArrayList<Elemento>();
 
+		// conexion
+
+		com = new Comunicacion();
+		com.addObserver(this);
+		Thread t = new Thread(com);
+		t.start();
+
 	}// cierra el constructor de logica
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -70,7 +80,7 @@ public class Logica {
 	/////////////////////////////////////////////////////////////////////////////
 
 	public void pintar() {
-
+		System.out.println(com.getClientes().size());
 		pan.pintar();
 
 		// juego
@@ -723,6 +733,11 @@ public class Logica {
 		jugadorUno.parar();
 		jugadorDos.parar();
 	}// soltar teclas
+
+	@Override
+	public void update(Observable o, Object arg) {
+
+	}
 
 	/////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////

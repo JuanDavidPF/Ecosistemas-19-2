@@ -33,6 +33,8 @@ public class Jugador {
 	private PImage elevandoD;
 	private PImage fallingD;
 	private PImage fallingI;
+	private PImage idUno;
+	private PImage idDos;
 	private ArrayList<Suelo> suelo;
 	private ArrayList<Elemento> elementos;
 
@@ -138,6 +140,9 @@ public class Jugador {
 
 		fallingI = app.loadImage("./data/Jugadores/Oveja/cayendoI.png");
 		fallingD = app.loadImage("./data/Jugadores/Oveja/cayendoD.png");
+
+		idUno = app.loadImage("./data/Escenario/Iconos/idUno.png");
+		idUno = app.loadImage("./data/Escenario/Iconos/idDos.png");
 	}// cierra el metodo jugar
 
 /////////////////////////////////////////////////////////////////////////////
@@ -150,10 +155,15 @@ public class Jugador {
 		this.suelo = suelo;
 		this.adversario = adversario;
 		this.elementos = elementos;
-
 		this.bandera = bandera;
 
 		sprites();
+
+		if (idPlayer == "Uno")
+			app.image(idUno, pos.x, pos.y);
+
+		if (idPlayer == "Dos")
+			app.image(idDos, pos.x, pos.y);
 
 	}// cierra el metodo pintar
 /////////////////////////////////////////////////////////////////////////////
