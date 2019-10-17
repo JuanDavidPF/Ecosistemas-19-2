@@ -37,7 +37,7 @@ public class Main extends PApplet {
 
 	public void setup() {
 
-		noCursor();
+		
 		frameRate(60);
 		log = new Logica(this);
 	}// cierra el metodo setup
@@ -47,7 +47,7 @@ public class Main extends PApplet {
 	/////////////////////////////////////////////////////////////////////////////
 
 	public void draw() {
-
+		noCursor();
 		log.pintar();
 	} // cierra el metodo draw
 

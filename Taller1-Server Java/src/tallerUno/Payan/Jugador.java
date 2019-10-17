@@ -1,6 +1,8 @@
 package tallerUno.Payan;
 
 import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
 
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -10,7 +12,7 @@ import processing.core.PVector;
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
-public class Jugador {
+public class Jugador implements Observer {
 
 	private Main app;
 	private Jugador adversario;
@@ -36,15 +38,21 @@ public class Jugador {
 	private PImage idUno;
 	private PImage idDos;
 	private ArrayList<Suelo> suelo;
+	private ArrayList<ListaClientes> clientes;
 	private ArrayList<Elemento> elementos;
 	private Bandera bandera;
+	private Comunicacion com;
+	private boolean clientLeft, clientRight, clientJump, clientCrouch;
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
-	public Jugador(Main app, String idPlayer, int x, int y) {
+	public Jugador(Main app, String idPlayer, int x, int y, ArrayList<ListaClientes> clientes) {
 
 		this.app = app;
+
+		// Cliente socket
+		this.clientes = clientes;
 
 		// numero de jugador
 
@@ -142,6 +150,10 @@ public class Jugador {
 
 		idUno = app.loadImage("./data/Escenario/Iconos/idUno.png");
 		idDos = app.loadImage("./data/Escenario/Iconos/idDos.png");
+
+		// comunicacion
+		com = Comunicacion.getSingleton();
+		com.addObserver(this);
 	}// cierra el metodo jugar
 
 /////////////////////////////////////////////////////////////////////////////
@@ -149,7 +161,6 @@ public class Jugador {
 /////////////////////////////////////////////////////////////////////////////
 
 	public void pintar(ArrayList<Suelo> suelo, Jugador adversario, ArrayList<Elemento> elementos, Bandera bandera) {
-
 		isDrawRunning = true;
 		this.suelo = suelo;
 		this.adversario = adversario;
@@ -165,6 +176,36 @@ public class Jugador {
 		if (idPlayer == "Dos") {
 			app.image(idDos, pos.x, pos.y - 90, 70, 50);
 		}
+
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+
+		if ((clientes.size() == 1 && idPlayer == "Uno") || clientes.size() == 2) {
+			if (clientRight) {
+				moverDerecha();
+			} else if (clientRight == false) {
+				NomoverDerecha();
+			}
+
+			if (clientLeft) {
+				moverIzquierda();
+			} else if (clientLeft == false) {
+				NomoverIzquierda();
+			}
+
+			if (clientJump) {
+				saltar();
+			} else if (clientJump == false) {
+				Nosaltar();
+			}
+
+			if (clientCrouch) {
+				agachar();
+			} else if (clientCrouch == false) {
+				Noagachar();
+			}
+		}
 	}// cierra el metodo pintar
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
@@ -172,98 +213,56 @@ public class Jugador {
 
 	public void mover() {
 
-		if (isDrawRunning) {
+		if (clientes.size() == 0 || (clientes.size() == 1 && idPlayer == "Dos")) {
 
-			switch (idPlayer) {
+			if (isDrawRunning) {
 
-			case "Uno":
+				switch (idPlayer) {
 
-				if (app.key == 'd' || app.key == 'D' && aplastado == false) {
-					perspectiva = "der";
-					der = true;
-					izq = false;
-				}
-				if (app.key == 'a' || app.key == 'A' && aplastado == false) {
-					perspectiva = "izq";
-					izq = true;
-					der = false;
-				}
+				case "Uno":
 
-				if (app.key == 's' || app.key == 'S' && arrastra == false) {
-					agachado = true;
-					izq = false;
-					der = false;
-				}
-
-				if (app.key == 'w' || app.key == 'W') {
-
-					if (puedeSaltar && cayendo == false && aplastado == false) {
-						if (agachado == false)
-							vel.y = -10;
-						if (agachado)
-							vel.y = -8;
-						puedeSaltar = false;
-						cayendo = true;
-						parado = false;
-						arrastra = false;
+					if (app.key == 'd' || app.key == 'D' && aplastado == false) {
+						moverDerecha();
+					}
+					if (app.key == 'a' || app.key == 'A' && aplastado == false) {
+						moverIzquierda();
 					}
 
-					if (arrastra && cayendo == false) {
-						vel.y = -10;
-						vel.x = rebotePared;
-						arrastra = false;
-						cayendo = true;
-						parado = false;
-					}
-				}
+					if (app.key == 's' || app.key == 'S' && arrastra == false) {
 
-				break;
-
-			case "Dos":
-
-				if (app.keyCode == PConstants.RIGHT && aplastado == false) {
-					perspectiva = "der";
-					der = true;
-					izq = false;
-				}
-				if (app.keyCode == PConstants.LEFT && aplastado == false) {
-					perspectiva = "izq";
-					izq = true;
-					der = false;
-				}
-
-				if (app.keyCode == PConstants.DOWN && arrastra == false) {
-					agachado = true;
-					izq = false;
-					der = false;
-				}
-
-				if (app.keyCode == PConstants.UP) {
-
-					if (puedeSaltar && cayendo == false && aplastado == false) {
-						if (agachado == false)
-							vel.y = -10;
-						if (agachado)
-							vel.y = -8;
-						puedeSaltar = false;
-						cayendo = true;
-						parado = false;
-						arrastra = false;
+						agachar();
 					}
 
-					if (arrastra && cayendo == false) {
-						vel.y = -10;
-						vel.x = rebotePared;
-						arrastra = false;
-						cayendo = true;
-						parado = false;
+					if (app.key == 'w' || app.key == 'W') {
+
+						saltar();
 					}
-				}
 
-				break;
-			} // cierra el switch de player
+					break;
 
-		} // cierra el if
+				case "Dos":
+
+					if (app.keyCode == PConstants.RIGHT && aplastado == false) {
+						moverDerecha();
+					}
+					if (app.keyCode == PConstants.LEFT && aplastado == false) {
+						moverIzquierda();
+					}
+
+					if (app.keyCode == PConstants.DOWN && arrastra == false) {
+						agachar();
+					}
+
+					if (app.keyCode == PConstants.UP) {
+
+						saltar();
+					}
+
+					break;
+				} // cierra el switch de player
+
+			} // cierra el if
+		}
 
 	}// cierra el metodo mover
 
@@ -272,51 +271,51 @@ public class Jugador {
 /////////////////////////////////////////////////////////////////////////////
 
 	public void parar() {
+		if (clientes.size() == 0 || (clientes.size() == 1 && idPlayer == "Dos")) {
+			switch (idPlayer) {
 
-		switch (idPlayer) {
+			case "Uno":
 
-		case "Uno":
+				if (app.key == 'd' || app.key == 'D' && aplastado == false) {
+					NomoverDerecha();
+				}
 
-			if (app.key == 'd' || app.key == 'D' && aplastado == false) {
-				der = false;
-			}
+				if (app.key == 'a' || app.key == 'A' && aplastado == false) {
+					NomoverIzquierda();
+				}
 
-			if (app.key == 'a' || app.key == 'A' && aplastado == false) {
-				izq = false;
-			}
+				if (app.key == 's' || app.key == 'S' && arrastra == false) {
+					Noagachar();
+				}
 
-			if (app.key == 's' || app.key == 'S' && arrastra == false) {
-				agachado = false;
-			}
+				if (app.key == 'w' || app.key == 'W' && gano == false) {
+					Nosaltar();
 
-			if (app.key == 'w' || app.key == 'W' && gano == false) {
+				}
 
-				cayendo = false;
-			}
+				break;
 
-			break;
+			case "Dos":
 
-		case "Dos":
+				if (app.keyCode == PConstants.RIGHT && aplastado == false) {
+					NomoverDerecha();
+				}
 
-			if (app.keyCode == PConstants.RIGHT && aplastado == false) {
-				der = false;
-			}
+				if (app.keyCode == PConstants.LEFT && aplastado == false) {
+					NomoverIzquierda();
+				}
 
-			if (app.keyCode == PConstants.LEFT && aplastado == false) {
-				izq = false;
-			}
+				if (app.keyCode == PConstants.DOWN && arrastra == false) {
+					Noagachar();
+				}
 
-			if (app.keyCode == PConstants.DOWN && arrastra == false) {
-				agachado = false;
-			}
+				if (app.keyCode == PConstants.UP && gano == false) {
 
-			if (app.keyCode == PConstants.UP && gano == false) {
-
-				cayendo = false;
-			}
-			break;
-		} // cierra el switch de player
-
+					Nosaltar();
+				}
+				break;
+			} // cierra el switch de player
+		}
 	}// cierra el metodo parar
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
@@ -329,7 +328,7 @@ public class Jugador {
 
 			while (true) {
 
-				System.out.println("");
+				System.out.print("");
 
 				if (isDrawRunning) {
 
@@ -721,7 +720,7 @@ public class Jugador {
 
 			while (true) {
 
-				System.out.println("");
+				System.out.print("");
 
 				if (isDrawRunning) {
 
@@ -764,7 +763,7 @@ public class Jugador {
 
 			while (true) {
 
-				System.out.println("");
+				System.out.print("");
 
 				if (isDrawRunning) {
 
@@ -807,6 +806,7 @@ public class Jugador {
 				} // cierra el if
 			} // cierra el while
 		}// cierra el run
+
 	} // cierra el hiloframeRate
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
@@ -1041,6 +1041,140 @@ public class Jugador {
 	public void setCaido(boolean caido) {
 		this.caido = caido;
 	}
+
+	// mover
+
+	public void moverIzquierda() {
+		perspectiva = "izq";
+		izq = true;
+		der = false;
+	}
+
+	public void moverDerecha() {
+		perspectiva = "der";
+		der = true;
+		izq = false;
+	}
+
+	public void saltar() {
+
+		if (puedeSaltar && cayendo == false && aplastado == false) {
+			if (agachado == false)
+				vel.y = -10;
+			if (agachado)
+				vel.y = -8;
+			puedeSaltar = false;
+			cayendo = true;
+			parado = false;
+			arrastra = false;
+		}
+
+		if (arrastra && cayendo == false) {
+			vel.y = -10;
+			vel.x = rebotePared;
+			arrastra = false;
+			cayendo = true;
+			parado = false;
+		}
+
+	}
+
+	public void agachar() {
+		agachado = true;
+		izq = false;
+		der = false;
+
+	}
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+	// parar
+
+	public void NomoverIzquierda() {
+		izq = false;
+	}
+
+	public void NomoverDerecha() {
+		der = false;
+	}
+
+	public void Nosaltar() {
+		cayendo = false;
+	}
+
+	public void Noagachar() {
+		agachado = false;
+	}
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+
+	@Override
+	public void update(Observable o, Object arg) {
+
+		String mensaje = (String) arg;
+
+		switch (idPlayer) {
+
+		case "Uno":
+
+			if (mensaje.contains("JugadorUno")) {
+				String[] valores = mensaje.split(",");
+
+				switch (valores[1]) {
+
+				case "jump":
+					clientJump = Boolean.parseBoolean(valores[2]);
+					break;
+
+				case "crouch":
+					clientCrouch = Boolean.parseBoolean(valores[2]);
+					break;
+
+				case "left":
+					clientLeft = Boolean.parseBoolean(valores[2]);
+					break;
+
+				case "right":
+					clientRight = Boolean.parseBoolean(valores[2]);
+					break;
+
+				}
+			}
+
+			break;
+
+		case "Dos":
+
+			if (mensaje.contains("JugadorDos")) {
+				String[] valores = mensaje.split(",");
+
+				switch (valores[1]) {
+
+				case "jump":
+					clientJump = Boolean.parseBoolean(valores[2]);
+					break;
+
+				case "crouch":
+					clientCrouch = Boolean.parseBoolean(valores[2]);
+					break;
+
+				case "left":
+					clientLeft = Boolean.parseBoolean(valores[2]);
+					break;
+
+				case "right":
+					clientRight = Boolean.parseBoolean(valores[2]);
+					break;
+
+				}
+
+			}
+
+			break;
+		}// cierra el switch de Update
+
+	}// cierra el metodo update
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////

@@ -34,6 +34,8 @@ public class Logica implements Observer {
 	private Comunicacion com;
 	private int loadingCon, readyCon;
 	private boolean readyOne, readyTwo;
+	private String clientSelUno, clientSelDos;
+
 	/////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////
@@ -44,6 +46,10 @@ public class Logica implements Observer {
 
 		// instancias
 		pan = new Pantalla(app);
+
+		// Strings
+		clientSelUno = "";
+		clientSelDos = "";
 
 		// numericas
 		ronda = 1;
@@ -99,8 +105,14 @@ public class Logica implements Observer {
 		// juego
 
 		switch (pan.getNivel()) {
-
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
 		case "Espera":
+			app.cursor(PConstants.ARROW);
 
 			if (app.frameCount % 5 == 0) {
 				loadingCon += 1;
@@ -113,6 +125,14 @@ public class Logica implements Observer {
 			app.textAlign(PConstants.CENTER, PConstants.CENTER);
 			app.textSize(30);
 			app.text("Esperando Jugadores (" + com.getClientes().size() + "/2).", app.width / 2, app.height / 2);
+
+			if (app.mouseX > 465 && app.mouseX < 724 && app.mouseY > 595 && app.mouseY < 615) {
+				app.textSize(34);
+			}
+
+			app.text("Iniciar juego local", app.width / 2, 600);
+			app.textSize(30);
+			app.text(app.mouseX + ", " + app.mouseY, app.mouseX, app.mouseY);
 			app.imageMode(PConstants.CENTER);
 			app.image(loading[loadingCon], app.width / 2, 200);
 
@@ -149,7 +169,7 @@ public class Logica implements Observer {
 
 			if (readyOne == false || readyTwo == false) {
 				readyCon = 3;
-				
+
 			}
 
 			if (readyOne && readyTwo) {
@@ -169,7 +189,12 @@ public class Logica implements Observer {
 			}
 
 			break;
-
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
 		case "Juego":
 
 			// contador corrector
@@ -214,11 +239,14 @@ public class Logica implements Observer {
 
 			// pintar los jugadores
 
-			jugadorUno.pintar(suelo, jugadorDos, elementos, bandera);
-			jugadorDos.pintar(suelo, jugadorUno, elementos, bandera);
+			if (poner == false && coger == false) {
 
-			jugadorUno = this.jugadorDos.getAdversario();
-			jugadorDos = this.jugadorUno.getAdversario();
+				jugadorUno.pintar(suelo, jugadorDos, elementos, bandera);
+				jugadorDos.pintar(suelo, jugadorUno, elementos, bandera);
+
+				jugadorUno = this.jugadorDos.getAdversario();
+				jugadorDos = this.jugadorUno.getAdversario();
+			}
 
 			if (poner && finalCountdown == false) {
 
@@ -302,6 +330,13 @@ public class Logica implements Observer {
 
 			break;// cierra el caso juego
 
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////
+
 		case "Game Over":
 
 			app.textSize(70);
@@ -363,6 +398,85 @@ public class Logica implements Observer {
 
 			break;
 		}// cierra el switch de pan nivel
+
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+// Desiciones de los clientes
+		if (pan.getNivel() == "Main") {
+			switch (clientSelUno) {
+
+			case "Juego":
+				app.image(cursorUno, 400, 460);
+				break;
+
+			case "Instrucciones":
+				app.image(cursorUno, 800, 460);
+				break;
+
+			}// cierra el switch de clientUno
+
+			switch (clientSelDos) {
+
+			case "Juego":
+				app.image(cursorDos, 400, 635);
+				break;
+
+			case "Instrucciones":
+				app.image(cursorDos, 800, 635);
+				break;
+
+			}// cierra el switch de clientDos
+
+// toma desiciones
+
+			if (clientSelUno.equals(clientSelDos) && clientSelUno.equals("Instrucciones")) {
+				clientSelUno = "";
+				clientSelDos = "";
+				pan.setNivel("Help");
+				com.getClientes().get(0).enviar("Nivel,Help");
+				com.getClientes().get(1).enviar("Nivel,Help");
+			} else if (clientSelUno.equals(clientSelDos) && clientSelUno.equals("Juego")) {
+				clientSelUno = "";
+				clientSelDos = "";
+				pan.setNivel("Help");
+				com.getClientes().get(0).enviar("Nivel,Escoger");
+				com.getClientes().get(1).enviar("Nivel,Escoger");
+				creacion();
+			}
+		}
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+		if (pan.getNivel() == "Help") {
+
+			if (clientSelUno.equals("Main"))
+				app.image(cursorUno, 90, 500);
+
+			if (clientSelDos.equals("Main"))
+				app.image(cursorDos, 150, 500);
+
+			if (clientSelUno.equals(clientSelDos) && clientSelUno.equals("Main")) {
+				clientSelUno = "";
+				clientSelDos = "";
+				pan.setNivel("Main");
+				com.getClientes().get(0).enviar("Nivel,Main");
+				com.getClientes().get(1).enviar("Nivel,Main");
+			}
+		}
+
 	}// cierra el metodo pintar
 
 /////////////////////////////////////////////////////////////////////////////
@@ -372,6 +486,22 @@ public class Logica implements Observer {
 	public void click() {
 
 		switch (pan.getNivel()) {
+
+		case "Espera":
+			if (com.getClientes().size() < 2) {
+				if (app.mouseX > 465 && app.mouseX < 724 && app.mouseY > 595 && app.mouseY < 615
+						&& com.getClientes().size() == 0 || readyOne) {
+					pan.setNivel("Main");
+					readyOne = false;
+					readyTwo = false;
+					readyCon = 3;
+					if (com.getClientes().size() > 0) {
+						com.getClientes().get(0).enviar("Nivel,Main");
+					}
+
+				}
+			}
+			break;
 
 		case "Main":
 
@@ -387,19 +517,37 @@ public class Logica implements Observer {
 			if (app.mouseX > 700 && app.mouseX < 890 && app.mouseY > 511 && app.mouseY < 585) {
 
 				pan.setNivel("Help");
+				clientSelUno = "";
+				clientSelDos = "";
+
+				for (int i = 0; i < com.getClientes().size(); i++) {
+					com.getClientes().get(i).enviar("Nivel,Help");
+				}
+
 			}
 
 			break;// cierra el case main
-
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 		case "Help":
 
 			// de las instrucciones al menu
 			if (PApplet.dist(app.mouseX, app.mouseY, 100, 600) < 85) {
 				pan.setNivel("Main");
+				clientSelUno = "";
+				clientSelDos = "";
+
+				for (int i = 0; i < com.getClientes().size(); i++) {
+					com.getClientes().get(i).enviar("Nivel,Main");
+				}
+
 			}
 
 			break;// cierra el case help
-
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 		case "Juego":
 
 			// coger un objeto
@@ -472,8 +620,8 @@ public class Logica implements Observer {
 					}
 
 					// crea los jugadores
-					jugadorUno = new Jugador(app, "Uno", 150, -200);
-					jugadorDos = new Jugador(app, "Dos", 250, -200);
+					jugadorUno = new Jugador(app, "Uno", 150, -200, com.getClientes());
+					jugadorDos = new Jugador(app, "Dos", 250, -200, com.getClientes());
 				}
 			}
 
@@ -530,6 +678,10 @@ public class Logica implements Observer {
 
 			break;// cierra el case juego
 
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
 		case "Game Over":
 			// reset
 			if (app.mouseX > 488 && app.mouseX < 711 && app.mouseY > 575 && app.mouseY < 625) {
@@ -537,9 +689,10 @@ public class Logica implements Observer {
 			}
 
 			break; // cierraa el case Game Ovel
-
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 		}// cierra el switch de nivel
-
 	}// cierra el metodo click
 
 /////////////////////////////////////////////////////////////////////////////
@@ -787,12 +940,20 @@ public class Logica implements Observer {
 		letrero = new Bandera(app, 40, -300);
 
 		// crea los jugadores
-		jugadorUno = new Jugador(app, "Uno", 150, -200);
-		jugadorDos = new Jugador(app, "Dos", 250, -200);
+		jugadorUno = new Jugador(app, "Uno", 150, -200, com.getClientes());
+		jugadorDos = new Jugador(app, "Dos", 250, -200, com.getClientes());
 
 		conteoRegresivoHilo = new Thread(new conteoRegresivo());
 		conteoRegresivoHilo.start();
 		pan.setNivel("Juego");
+
+		// clientes
+		clientSelUno = "";
+		clientSelDos = "";
+		for (int i = 0; i < com.getClientes().size(); i++) {
+			com.getClientes().get(i).enviar("Nivel,Jugar");
+		}
+
 	}// cierra el metodo creacion
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -821,7 +982,7 @@ public class Logica implements Observer {
 	public void update(Observable o, Object arg) {
 		String mensaje = (String) arg;
 
-		if (mensaje.contains("listo")) {
+		if (mensaje.contains("Listo")) {
 
 			String[] valores = mensaje.split(",");
 			String jugador = valores[0];
@@ -831,6 +992,19 @@ public class Logica implements Observer {
 				readyOne = listo;
 			} else if (jugador.equals("JugadorDos")) {
 				readyTwo = listo;
+			}
+
+		} else if (mensaje.contains("Pantalla")) {
+			String[] valores = mensaje.split(",");
+			String jugador = valores[0];
+			String pantalla = valores[2];
+
+			if (jugador.equals("JugadorUno")) {
+				clientSelUno = pantalla;
+
+			} else if (jugador.equals("JugadorDos")) {
+				clientSelDos = pantalla;
+
 			}
 
 		}

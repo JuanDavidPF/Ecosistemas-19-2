@@ -99,7 +99,7 @@ public class Bandera {
 
 			while (true) {
 
-				System.out.println("");
+				System.out.print("");
 
 				if (isDrawRunning) {
 
@@ -145,7 +145,7 @@ public class Bandera {
 		public void run() {
 			while (true) {
 
-				System.out.println(app.frameRate);
+				System.out.print("");
 
 				if (isDrawRunning) {
 

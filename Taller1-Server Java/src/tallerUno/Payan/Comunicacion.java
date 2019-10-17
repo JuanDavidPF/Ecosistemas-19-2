@@ -36,9 +36,7 @@ public class Comunicacion extends Observable implements Runnable, Observer {
 	public void run() {
 
 		while (true) {
-
 			if (clientes.size() < 2) {
-
 				try {
 					recibirClientes();
 					Thread.sleep(100);
